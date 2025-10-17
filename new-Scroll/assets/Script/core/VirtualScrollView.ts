@@ -52,7 +52,7 @@ export class VirtualScrollView extends ScrollView {
     }
 
     onPositionChanged() {
-        console.log("位置改变了")
+        console.log("位置改变了1")
     }
     getStart() {
         let start: number = 0;
