@@ -1,0 +1,10 @@
+{
+  "name": "Scroll",
+  "uuid": "7ab3780d-0412-4267-b130-8951f6867730",
+  "creator": {
+    "version": "3.8.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
