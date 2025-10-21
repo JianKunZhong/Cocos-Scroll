@@ -1,45 +1,84 @@
-// 轻量的响应式数组实现（参考 Vue3 的 Proxy 思路）
-export type ArrayChangeType = 'set' | 'delete' | 'method' | 'length';
-export interface ArrayChange {
-  type: ArrayChangeType;
-  key?: number | string;
-  oldValue?: any;
-  value?: any;
-  method?: string;
-  args?: any[];
-  length?: number;
-}
+// ReactiveData.ts
+export class ReactiveData<T> {
+    private _value: T;
+    private _listeners: Array<(newValue: T, oldValue: T) => void> = [];
 
-const mutableMethods = new Set(['push','pop','shift','unshift','splice','sort','reverse','copyWithin','fill']);
-
-export function createReactiveArray<T>(arr: T[], onChange: (change: ArrayChange) => void): T[] {
-  return new Proxy(arr, {
-    get(target, prop, receiver) {
-      const val = Reflect.get(target, prop, receiver);
-      if (typeof prop === 'string' && typeof val === 'function' && mutableMethods.has(prop)) {
-        return (...args: any[]) => {
-          const result = Reflect.apply(val, target, args);
-          onChange({ type: 'method', method: prop, args, length: target.length });
-          return result;
-        };
-      }
-      return val;
-    },
-    set(target, prop, value, receiver) {
-      const oldValue = (target as any)[prop];
-      const res = Reflect.set(target, prop, value, receiver);
-      if (prop === 'length') {
-        onChange({ type: 'length', length: value as any });
-      } else {
-        onChange({ type: 'set', key: prop as any, oldValue, value });
-      }
-      return res;
-    },
-    deleteProperty(target, prop) {
-      const oldValue = (target as any)[prop];
-      const res = Reflect.deleteProperty(target, prop);
-      onChange({ type: 'delete', key: prop as any, oldValue });
-      return res;
+    constructor(initialValue: T) {
+        this._value = this.makeReactive(initialValue);
     }
-  });
+
+    get value(): T {
+        return this._value;
+    }
+
+    set value(newValue: T) {
+        const oldValue = this._value;
+        this._value = this.makeReactive(newValue);
+        this.notifyChange(this._value, oldValue);
+    }
+
+    private makeReactive(obj: any): any {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+
+        const self = this;
+        
+        // 对数组进行特殊处理
+        if (Array.isArray(obj)) {
+            // 重写数组方法
+            const arrayMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
+            arrayMethods.forEach(method => {
+                const original = obj[method];
+                obj[method] = function(...args: any[]) {
+                    const result = original.apply(this, args);
+                    self.notifyChange(self._value, self._value);
+                    return result;
+                };
+            });
+            
+            // 递归处理数组元素
+            for (let i = 0; i < obj.length; i++) {
+                obj[i] = self.makeReactive(obj[i]);
+            }
+        } else {
+            // 处理普通对象
+            Object.keys(obj).forEach(key => {
+                let value = obj[key];
+                Object.defineProperty(obj, key, {
+                    get() {
+                        return value;
+                    },
+                    set(newVal) {
+                        if (newVal !== value) {
+                            value = self.makeReactive(newVal);
+                            self.notifyChange(self._value, self._value);
+                        }
+                    }
+                });
+                
+                // 递归处理嵌套对象
+                obj[key] = self.makeReactive(value);
+            });
+        }
+        
+        return obj;
+    }
+
+    public onChange(callback: (newValue: T, oldValue: T) => void): void {
+        this._listeners.push(callback);
+    }
+
+    public offChange(callback: (newValue: T, oldValue: T) => void): void {
+        const index = this._listeners.indexOf(callback);
+        if (index > -1) {
+            this._listeners.splice(index, 1);
+        }
+    }
+
+    private notifyChange(newValue: T, oldValue: T): void {
+        for (const listener of this._listeners) {
+            listener(newValue, oldValue);
+        }
+    }
 }

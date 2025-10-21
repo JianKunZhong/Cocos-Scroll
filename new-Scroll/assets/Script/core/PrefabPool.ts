@@ -128,84 +128,84 @@ export class PrefabPool {
   }
 }
 
-/**
- * 可挂载到场景节点的控制器封装，便于在编辑器中配置与使用。
- * 用法：
- * 1) 将本组件挂到某个节点，设置 `prefab`、`container`、`initialSize`、`maxSize`。
- * 2) 通过 `get()` 获取节点实例，使用结束后调用 `recycle(node)`。
- */
-@ccclass('PrefabPoolController')
-export class PrefabPoolController extends Component {
-  @property({ type: Prefab })
-  prefab: Prefab | null = null;
+// /**
+//  * 可挂载到场景节点的控制器封装，便于在编辑器中配置与使用。
+//  * 用法：
+//  * 1) 将本组件挂到某个节点，设置 `prefab`、`container`、`initialSize`、`maxSize`。
+//  * 2) 通过 `get()` 获取节点实例，使用结束后调用 `recycle(node)`。
+//  */
+// @ccclass('PrefabPoolController')
+// export class PrefabPoolController extends Component {
+//   @property({ type: Prefab })
+//   prefab: Prefab | null = null;
 
-  @property({ type: Node })
-  container: Node | null = null;
+//   @property({ type: Node })
+//   container: Node | null = null;
 
-  @property
-  initialSize = 10;
+//   @property
+//   initialSize = 10;
 
-  @property
-  maxSize = 64;
+//   @property
+//   maxSize = 64;
 
-  private pool: PrefabPool | null = null;
+//   private pool: PrefabPool | null = null;
 
-  onLoad() {
-    if (!this.container) this.container = this.node;
-    if (this.prefab) {
-      this.pool = new PrefabPool({
-        prefab: this.prefab,
-        parent: this.container,
-        initialSize: this.initialSize,
-        maxSize: this.maxSize,
-      });
-    } else {
-      warn('[PrefabPoolController] Prefab is not set.');
-    }
-  }
+//   onLoad() {
+//     if (!this.container) this.container = this.node;
+//     if (this.prefab) {
+//       this.pool = new PrefabPool({
+//         prefab: this.prefab,
+//         parent: this.container,
+//         initialSize: this.initialSize,
+//         maxSize: this.maxSize,
+//       });
+//     } else {
+//       warn('[PrefabPoolController] Prefab is not set.');
+//     }
+//   }
 
-  /** 获取一个节点实例。可选指定父节点用于临时布局。*/
-  get(parent?: Node | null): Node | null {
-    if (!this.pool) return null;
-    return this.pool.acquire(parent ?? this.container);
-  }
+//   /** 获取一个节点实例。可选指定父节点用于临时布局。*/
+//   get(parent?: Node | null): Node | null {
+//     if (!this.pool) return null;
+//     return this.pool.acquire(parent ?? this.container);
+//   }
 
-  /** 归还节点到池中。*/
-  recycle(node: Node): void {
-    if (!this.pool || !node) return;
-    this.pool.release(node);
-  }
+//   /** 归还节点到池中。*/
+//   recycle(node: Node): void {
+//     if (!this.pool || !node) return;
+//     this.pool.release(node);
+//   }
 
-  /** 调整容量。*/
-  resize(capacity: number): void {
-    if (!this.pool) return;
-    this.pool.resize(capacity);
-  }
+//   /** 调整容量。*/
+//   resize(capacity: number): void {
+//     if (!this.pool) return;
+//     this.pool.resize(capacity);
+//   }
 
-  /** 清理闲置节点。*/
-  clearIdle(): void {
-    if (!this.pool) return;
-    this.pool.clearIdle();
-  }
+//   /** 清理闲置节点。*/
+//   clearIdle(): void {
+//     if (!this.pool) return;
+//     this.pool.clearIdle();
+//   }
 
-  /** 完全清理（包含在用节点）。*/
-  clearAll(): void {
-    if (!this.pool) return;
-    this.pool.clearAll();
-  }
+//   /** 完全清理（包含在用节点）。*/
+//   clearAll(): void {
+//     if (!this.pool) return;
+//     this.pool.clearAll();
+//   }
 
-  /** 统计信息。*/
-  stats(): PoolStats | null {
-    if (!this.pool) return null;
-    return this.pool.stats();
-  }
-}
+//   /** 统计信息。*/
+//   stats(): PoolStats | null {
+//     if (!this.pool) return null;
+//     return this.pool.stats();
+//   }
+// }
 
-/**
- * 示例（代码中调用）：
- *
- * // 在某组件脚本中：
- * // const poolCtrl = this.node.getComponent(PrefabPoolController);
- * // const item = poolCtrl?.get();
- * // 使用后： poolCtrl?.recycle(item!);
- */
+// /**
+//  * 示例（代码中调用）：
+//  *
+//  * // 在某组件脚本中：
+//  * // const poolCtrl = this.node.getComponent(PrefabPoolController);
+//  * // const item = poolCtrl?.get();
+//  * // 使用后： poolCtrl?.recycle(item!);
+//  */
